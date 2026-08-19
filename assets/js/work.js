@@ -15,6 +15,11 @@
                leave '' and the lightbox says "not linked yet"
      vertical  true for 9:16 reels, false for 16:9 films
      desc      the description shown in the lightbox
+     gallery   optional list of stills for a photo set, e.g.
+                 gallery: ['assets/img/luxe-pods/01.jpg', ...]
+               they appear as a filmstrip under the player and each one
+               opens in the frame. Missing files draw a placeholder, so
+               you can list the paths first and add the photos later.
 
    Projects below are taken from behance.net/dhanushvijayar1.
    The descriptions are first drafts — rewrite them in Dhanushan's
@@ -50,6 +55,16 @@ window.WORK = [
     thumb: '',
     yt: '',
     vertical: true,
+    gallery: [
+      'assets/img/luxe-pods/01.jpg',
+      'assets/img/luxe-pods/02.jpg',
+      'assets/img/luxe-pods/03.jpg',
+      'assets/img/luxe-pods/04.jpg',
+      'assets/img/luxe-pods/05.jpg',
+      'assets/img/luxe-pods/06.jpg',
+      'assets/img/luxe-pods/07.jpg',
+      'assets/img/luxe-pods/08.jpg'
+    ],
     desc: 'Accommodation brand shoot built around the pod interiors and their setting.'
   },
   {
@@ -110,6 +125,12 @@ window.WORK = [
     thumb: '',
     yt: '',
     vertical: true,
+    gallery: [
+      'assets/img/key-jeans/01.jpg',
+      'assets/img/key-jeans/02.jpg',
+      'assets/img/key-jeans/03.jpg',
+      'assets/img/key-jeans/04.jpg'
+    ],
     desc: 'Apparel campaign for Key Jeans — fit, fabric and movement.'
   },
   {
@@ -140,6 +161,14 @@ window.WORK = [
     thumb: '',
     yt: '',
     vertical: false,
+    gallery: [
+      'assets/img/leather/01.jpg',
+      'assets/img/leather/02.jpg',
+      'assets/img/leather/03.jpg',
+      'assets/img/leather/04.jpg',
+      'assets/img/leather/05.jpg',
+      'assets/img/leather/06.jpg'
+    ],
     desc: 'Studio product photography for a leather goods collection.'
   }
 ];

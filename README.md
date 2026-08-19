@@ -6,7 +6,7 @@ Live: https://ark-devs.github.io/Danushan-Portfolio/
 
 | Branch | What it is |
 |---|---|
-| `main` | **v4** — light / minimal / premium, motion pass. Current direction. |
+| `main` | **v4.01** — light / minimal / premium, motion + galleries. Current. |
 | `v3` | Light theme, portrait hero plate. Kept for reference. |
 | `v2` | Dark minimal. Kept for reference. |
 | `v1` | The first build (retro-brutalist). Kept for reference. |
@@ -51,6 +51,27 @@ Notes:
 - **`yt`** is the id only — from `youtube.com/watch?v=ABC123` use `ABC123`.
   Leave it empty and the lightbox says the video isn't linked yet.
 - **`desc`** is the description shown next to the player.
+- **`gallery`** turns a project into a photo library. List the paths:
+
+  ```js
+  gallery: [
+    'assets/img/luxe-pods/01.jpg',
+    'assets/img/luxe-pods/02.jpg'
+  ]
+  ```
+
+  A filmstrip appears under the player and each shot opens in the frame.
+  The tile gets an "8 shots" badge. List the paths before the photos exist —
+  each missing one draws a placeholder telling you where to drop the file.
+  A project can have both a film and a gallery; the film sits first in
+  the strip.
+
+### Cache
+
+Asset URLs carry `?v=4.01`. **Bump that number in `index.html` whenever you
+edit the CSS or JS**, otherwise returning visitors keep the old cached copy.
+This bit me during development — the browser served a stale `work.js` and the
+new galleries silently did not appear.
 
 ## The hero showreel
 
@@ -116,3 +137,16 @@ as an affordance.
 All motion is dropped under `prefers-reduced-motion`, and the dimmed starting
 states only apply once the ticker has produced a real frame — so a page that
 never animates shows its copy at full strength rather than greyed out.
+
+## Mobile
+
+Fixed in v4.01, all measured at 390px:
+
+- The category filter was a **133px block of six wrapping pills**. It is now a
+  single scrollable rail bled to the page edges — 52px.
+- The card-stack ghosts overflowed the viewport edge on a small screen, so
+  they are hidden below 820px. They read as depth on desktop and as clutter
+  on a phone.
+- Tile title and category fought for room on a 171px tile; they now stack.
+- Wide letter-spacing on 10px type was most of the remaining visual noise, so
+  tracking is reduced across the micro text below 540px.

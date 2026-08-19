@@ -485,3 +485,78 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 }
 .foot__credit a:hover { border-bottom-color: var(--ink); }
 @media (max-width: 540px) { .foot { justify-content: center; text-align: center; gap: 6px; } }
+
+
+/* ==================================================================
+   GALLERY — a project can be a photo library, not just a film
+   ================================================================== */
+.tile__count {
+  position: absolute; left: 10px; bottom: 10px; z-index: 2;
+  background: rgba(247, 245, 241, .92); color: var(--ink);
+  padding: 4px 9px; border-radius: 999px;
+  font-size: .54rem; letter-spacing: .14em; text-transform: uppercase;
+}
+
+.lb__strip {
+  grid-column: 1 / -1;
+  display: flex; gap: 8px; overflow-x: auto; padding: 14px 0 2px;
+  scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+.lb__strip::-webkit-scrollbar { display: none; }
+.lb__strip[hidden] { display: none; }
+.lb__thumb {
+  flex: none; position: relative; width: 62px; aspect-ratio: 1 / 1;
+  border-radius: 2px; overflow: hidden; background: var(--paper-2);
+  opacity: .5; outline: 1px solid transparent; outline-offset: 2px;
+  transition: opacity .3s var(--ease), outline-color .3s var(--ease);
+}
+.lb__thumb:hover { opacity: .85; }
+.lb__thumb.is-on { opacity: 1; outline-color: var(--ink); }
+.lb__thumb img { width: 100%; height: 100%; object-fit: cover; }
+.lb__thumb .tile__ph { transform: none; }
+.lb__thumb--reel::after {
+  content: ""; position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%, -50%); width: 0; height: 0;
+  border-left: 9px solid var(--paper); border-top: 6px solid transparent; border-bottom: 6px solid transparent;
+  filter: drop-shadow(0 0 3px rgba(20, 19, 15, .6));
+}
+.lb__shot { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
+/* ==================================================================
+   MOBILE — quieting the small screen
+   ================================================================== */
+@media (max-width: 820px) {
+  /* the fanned ghosts push past the viewport edge and read as clutter
+     rather than as depth once the plate is this small */
+  .hero__ghost { display: none; }
+}
+
+@media (max-width: 640px) {
+  /* six wrapping pills built a 133px block of noise above the grid.
+     One scrollable rail, bled to the page edges, reads as a control. */
+  .cats {
+    flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden;
+    margin-left: calc(var(--pad) * -1); margin-right: calc(var(--pad) * -1);
+    padding: 2px var(--pad) 12px;
+    scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .cats::-webkit-scrollbar { display: none; }
+  .cat { flex: none; scroll-snap-align: start; }
+}
+
+@media (max-width: 540px) {
+  /* title and category fought for room on a 171px tile */
+  .tile__meta { flex-direction: column; align-items: flex-start; gap: 3px; padding-top: 11px; }
+  .tile__cat { font-size: .56rem; letter-spacing: .12em; }
+
+  /* wide tracking on 10px type is what made the small screen feel busy */
+  .eyebrow { letter-spacing: .18em; }
+  .hero__sub { letter-spacing: .2em; font-size: .62rem; }
+  .foot { letter-spacing: .1em; font-size: .58rem; gap: 4px 14px; }
+  .lb__cat { letter-spacing: .16em; }
+  .cat { letter-spacing: .14em; padding: 9px 15px; }
+
+  .lb__thumb { width: 52px; }
+  .lb__strip { padding-top: 10px; }
+}

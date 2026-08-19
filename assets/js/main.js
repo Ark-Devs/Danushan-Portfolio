@@ -132,6 +132,8 @@
              '<span class="tile__frame">' +
                '<span class="tile__inner">' + art + '</span>' +
                '<span class="tile__veil"></span><span class="tile__play"></span>' +
+               (w.gallery && w.gallery.length
+                 ? '<span class="tile__count">' + w.gallery.length + ' shots</span>' : '') +
              '</span>' +
              '<span class="tile__meta">' +
                '<span class="tile__title">' + esc(w.title) + '</span>' +
@@ -307,17 +309,82 @@
   var lbDesc = $('#lbDesc'), lbTags = $('#lbTags'), lbClose = $('#lbClose');
   var current = -1, lastFocus = null;
 
-  function render(i) {
+  /* A project can be a film, a photo library, or both. shot === -1 is the
+     film; 0+ indexes into w.gallery. The strip only appears when there is
+     more than one thing to look at. */
+  var lbStrip = $('#lbStrip');
+  var shot = -1;
+
+  function paintStage(w) {
+    lbBox.className = 'lb__box' + (w.vertical ? '' : ' is-wide');
+
+    if (shot < 0) {
+      lbBox.innerHTML = w.yt
+        ? '<iframe src="https://www.youtube.com/embed/' + esc(w.yt) + '?autoplay=1&rel=0&modestbranding=1&playsinline=1" ' +
+          'title="' + esc(w.title) + '" ' +
+          'allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share" ' +
+          'referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>'
+        : '<div class="lb__ph">Video not linked yet<br />Add a YouTube id in work.js</div>';
+      return;
+    }
+
+    var src = w.gallery && w.gallery[shot];
+    lbBox.innerHTML = '<img class="lb__shot" src="' + esc(src) + '" alt="' +
+                      esc(w.title + ' — shot ' + (shot + 1)) + '" />';
+    var img = lbBox.querySelector('img');
+    img.addEventListener('error', function () {
+      lbBox.innerHTML = '<div class="lb__ph">Photo ' + (shot + 1) + ' of ' + w.gallery.length +
+                        '<br />Drop it at ' + esc(src) + '</div>';
+    });
+  }
+
+  function paintStrip(w) {
+    var items = [];
+    if (w.yt) items.push({ kind: 'reel', src: '' });
+    (w.gallery || []).forEach(function (g, n) { items.push({ kind: 'shot', src: g, n: n }); });
+
+    if (items.length < 2) { lbStrip.hidden = true; lbStrip.innerHTML = ''; return; }
+    lbStrip.hidden = false;
+
+    lbStrip.innerHTML = items.map(function (it) {
+      var idx = it.kind === 'reel' ? -1 : it.n;
+      var on = idx === shot ? ' is-on' : '';
+      var inner = it.kind === 'reel'
+        ? '<span class="tile__ph" style="--h:30"></span>'
+        : '<img src="' + esc(it.src) + '" alt="" loading="lazy" />';
+      var cls = 'lb__thumb' + on + (it.kind === 'reel' ? ' lb__thumb--reel' : '');
+      return '<button class="' + cls + '" data-shot="' + idx + '" aria-label="' +
+             (it.kind === 'reel' ? 'Play the film' : 'Show photo ' + (it.n + 1)) + '">' + inner + '</button>';
+    }).join('');
+
+    // a missing photo falls back to a placeholder rather than a torn icon
+    $$('img', lbStrip).forEach(function (im) {
+      im.addEventListener('error', function () {
+        var ph = document.createElement('span');
+        ph.className = 'tile__ph';
+        if (im.parentNode) im.parentNode.replaceChild(ph, im);
+      });
+    });
+  }
+
+  lbStrip.addEventListener('click', function (e) {
+    var b = e.target.closest('.lb__thumb');
+    if (!b) return;
+    shot = +b.getAttribute('data-shot');
+    var w = WORK[current];
+    paintStage(w);
+    $$('.lb__thumb', lbStrip).forEach(function (t) {
+      t.classList.toggle('is-on', +t.getAttribute('data-shot') === shot);
+    });
+  });
+
+  function render(i, keepShot) {
     var w = WORK[i];
     if (!w) return;
     current = i;
-    lbBox.className = 'lb__box' + (w.vertical ? '' : ' is-wide');
-    lbBox.innerHTML = w.yt
-      ? '<iframe src="https://www.youtube.com/embed/' + esc(w.yt) + '?autoplay=1&rel=0&modestbranding=1&playsinline=1" ' +
-        'title="' + esc(w.title) + '" ' +
-        'allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share" ' +
-        'referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>'
-      : '<div class="lb__ph">Video not linked yet<br />Add a YouTube id in work.js</div>';
+    if (!keepShot) shot = w.yt ? -1 : 0;      // film first, else the first photo
+    paintStage(w);
+    paintStrip(w);
     lbCat.textContent = w.cat;
     lbTitle.textContent = w.title;
     lbDesc.textContent = w.desc || '';
