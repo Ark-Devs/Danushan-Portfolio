@@ -163,6 +163,12 @@ window.M = (function () {
   /* ================================================================
      expand-card — FLIP a source rect onto a destination element
      ================================================================ */
+  /* Driven by the Web Animations API rather than a transition reset inside
+     a double requestAnimationFrame. The old version left the element stuck
+     at the source rect whenever those frames did not arrive — a background
+     tab, a throttled renderer — which collapsed the whole dialog onto the
+     footprint of the tile it came from. WAAPI needs no cleanup frame and
+     leaves no residual inline transform behind. */
   function flip(fromRect, toEl, opts) {
     if (reduceMQ.matches || !fromRect) return;
     opts = opts || {};
@@ -174,20 +180,19 @@ window.M = (function () {
     var sx = fromRect.width / to.width;
     var sy = fromRect.height / to.height;
 
-    toEl.style.transition = 'none';
+    if (!toEl.animate) return;             // no WAAPI: just appear, never stick
     toEl.style.transformOrigin = 'center center';
-    toEl.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(' + sx + ',' + sy + ')';
-
-    requestAnimationFrame(function () {
-      requestAnimationFrame(function () {
-        toEl.style.transition = 'transform ' + (opts.duration || '.62s') + ' cubic-bezier(.16,.84,.34,1)';
-        toEl.style.transform = 'none';
-      });
-    });
+    toEl.animate(
+      [
+        { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(' + sx + ',' + sy + ')' },
+        { transform: 'none' }
+      ],
+      { duration: opts.duration || 620, easing: 'cubic-bezier(.16,.84,.34,1)' }
+    );
   }
   function unflip(el) {
-    el.style.transition = 'none';
-    el.style.transform = 'none';
+    el.style.transform = '';
+    el.style.transition = '';
   }
 
   /* ================================================================

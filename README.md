@@ -6,7 +6,7 @@ Live: https://ark-devs.github.io/Danushan-Portfolio/
 
 | Branch | What it is |
 |---|---|
-| `main` | **v4.03** — light / minimal / premium, motion + card-stack galleries. Current. |
+| `main` | **v4.05** — light / minimal / premium, motion + card-stack galleries. Current. |
 | `v3` | Light theme, portrait hero plate. Kept for reference. |
 | `v2` | Dark minimal. Kept for reference. |
 | `v1` | The first build (retro-brutalist). Kept for reference. |
@@ -75,7 +75,7 @@ Notes:
 
 ### Cache
 
-Asset URLs carry `?v=4.03`. **Bump that number in `index.html` whenever you
+Asset URLs carry `?v=4.05`. **Bump that number in `index.html` whenever you
 edit the CSS or JS**, otherwise returning visitors keep the old cached copy.
 This bit me during development — the browser served a stale `work.js` and the
 new galleries silently did not appear.
