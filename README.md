@@ -6,7 +6,8 @@ Live: https://ark-devs.github.io/Danushan-Portfolio/
 
 | Branch | What it is |
 |---|---|
-| `main` | **v2** — minimal / premium. Current direction. |
+| `main` | **v3** — light / minimal / premium. Current direction. |
+| `v2` | Dark minimal. Kept for reference. |
 | `v1` | The first build (retro-brutalist). Kept for reference. |
 
 Each new direction gets its own branch (`v3`, `v4`…) so nothing is lost.
@@ -50,6 +51,12 @@ Notes:
 - **`desc`** is the description shown next to the player.
 
 ## The hero showreel
+
+The reel is portrait, so it is shown as a portrait plate rather than a
+full-bleed background. That is deliberate: a 9:16 film stretched across a
+16:9 background is pillarboxed, which is where the black space in v2 came
+from. The plate is 9:16 and the player matches it exactly, so there are no
+bars at all.
 
 Drop the vertical reel at **`assets/video/showreel.mp4`** and it plays behind
 the name automatically. Add `assets/img/showreel-poster.jpg` for the first

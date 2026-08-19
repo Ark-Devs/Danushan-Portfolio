@@ -1,8 +1,12 @@
 /* ==================================================================
-   DHANUVJ — v2 behaviour
+   DHANUVJ — v3 behaviour
    ------------------------------------------------------------------
    Reads window.WORK and window.SITE from work.js. Nothing in here
    needs editing to add projects — edit work.js instead.
+
+   Motion: one rAF loop drives the scroll-linked hero and the tile
+   parallax. Discrete reveals are left to IntersectionObserver so
+   they cost nothing once fired.
    ================================================================== */
 
 (function () {
@@ -14,6 +18,7 @@
   var $  = function (s, c) { return (c || document).querySelector(s); };
   var $$ = function (s, c) { return Array.prototype.slice.call((c || document).querySelectorAll(s)); };
   var reduceMQ = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var clamp = function (v, a, b) { return v < a ? a : v > b ? b : v; };
 
   var yearEl = $('#year');
   if (yearEl) yearEl.textContent = new Date().getFullYear();
@@ -26,11 +31,8 @@
 
   /* ---------------- nav ---------------- */
   var nav = $('#nav');
-  window.addEventListener('scroll', function () {
-    nav.classList.toggle('is-stuck', window.scrollY > 20);
-  }, { passive: true });
-
   var burger = $('#burger'), sheet = $('#sheet');
+
   function setSheet(open) {
     if (open) { sheet.hidden = false; sheet.classList.add('is-shown'); void sheet.offsetWidth; }
     sheet.classList.toggle('is-open', open);
@@ -43,14 +45,15 @@
       }, 380);
     }
   }
-  burger.addEventListener('click', function () {
-    setSheet(burger.getAttribute('aria-expanded') !== 'true');
-  });
+  burger.addEventListener('click', function () { setSheet(burger.getAttribute('aria-expanded') !== 'true'); });
   $$('a', sheet).forEach(function (a) { a.addEventListener('click', function () { setSheet(false); }); });
 
   /* ---------------- hero reel ----------------
      Try the local file first. If it is missing or cannot play, fall back
-     to the YouTube reel so the hero is never a dead rectangle. */
+     to the YouTube reel so the plate is never empty.
+
+     The plate is 9:16 and the iframe matches it exactly, so a vertical
+     film fills it with no pillarbox bars. See the CSS note on .hero__yt. */
   var heroVid = $('#heroVid'), heroMedia = $('#heroMedia'), soundBtn = $('#soundBtn');
   var usingYT = false;
 
@@ -122,8 +125,12 @@
     var art = w.thumb
       ? '<img class="tile__img" src="' + esc(w.thumb) + '" alt="' + esc(w.title) + '" loading="lazy" decoding="async" />'
       : '<span class="tile__ph" style="--h:' + hue + '"><span>' + esc(w.title.charAt(0)) + '</span></span>';
-    return '<button class="tile" data-i="' + i + '" data-cat="' + esc(w.cat) + '" aria-label="Open ' + esc(w.title) + '">' +
-             '<span class="tile__frame">' + art +
+    // stagger by column so a row wipes open left to right
+    var delay = (i % 3) * 90;
+    return '<button class="tile" data-i="' + i + '" data-cat="' + esc(w.cat) + '" style="--d:' + delay + 'ms" ' +
+             'aria-label="Open ' + esc(w.title) + '">' +
+             '<span class="tile__frame">' +
+               '<span class="tile__inner">' + art + '</span>' +
                '<span class="tile__veil"></span><span class="tile__play"></span>' +
              '</span>' +
              '<span class="tile__meta">' +
@@ -166,7 +173,9 @@
     applyFilter(btn.getAttribute('data-cat'));
   });
 
-  /* ---------------- reveal ---------------- */
+  /* ---------------- reveals ---------------- */
+  var revealTargets = $$('[data-rv]').concat($$('[data-rv-mask]')).concat(tiles);
+
   if ('IntersectionObserver' in window && !reduceMQ.matches) {
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (e) {
@@ -175,18 +184,80 @@
         io.unobserve(e.target);
       });
     }, { rootMargin: '0px 0px -8% 0px', threshold: .06 });
-    $$('[data-rv]').concat(tiles).forEach(function (el) { io.observe(el); });
+    revealTargets.forEach(function (el) { io.observe(el); });
 
     // never strand on-screen content hidden if the observer misfires
     window.setTimeout(function () {
-      $$('[data-rv]:not(.is-in), .tile:not(.is-in)').forEach(function (el) {
+      revealTargets.forEach(function (el) {
+        if (el.classList.contains('is-in')) return;
         var r = el.getBoundingClientRect();
         if (r.top < window.innerHeight && r.bottom > 0) el.classList.add('is-in');
       });
     }, 2000);
   } else {
-    $$('[data-rv]').concat(tiles).forEach(function (el) { el.classList.add('is-in'); });
+    revealTargets.forEach(function (el) { el.classList.add('is-in'); });
   }
+
+  /* ---------------- scroll-linked motion ----------------
+     One rAF loop, only running while a scroll is settling. The hero plate
+     lifts and grows a little while the name drifts up and fades, so the
+     two separate as you enter the work. Tile stills drift against their
+     frames for depth. */
+  var heroEl = $('#hero'), heroReel = $('#heroReel'), wordEl = $('#wordmark');
+  var wordInner = wordEl ? wordEl.firstElementChild : null;
+  var running = false, queued = false;
+
+  function frame() {
+    running = true;
+    var y = window.pageYOffset || document.documentElement.scrollTop || 0;
+
+    nav.classList.toggle('is-stuck', y > 20);
+
+    if (heroEl && heroReel && wordInner) {
+      var h = heroEl.offsetHeight || 1;
+      var p = clamp(y / (h * 0.9), 0, 1);
+      heroReel.style.transform = 'translate3d(0,' + (p * 46) + 'px,0) scale(' + (1 + p * 0.07) + ')';
+      wordInner.style.transform = 'translate3d(0,' + (p * -84) + 'px,0) scale(' + (1 - p * 0.05) + ')';
+      wordInner.style.opacity = String(clamp(1 - p * 1.35, 0, 1));
+    }
+
+    // parallax only for tiles currently on screen
+    var vh = window.innerHeight;
+    for (var i = 0; i < tiles.length; i++) {
+      var t = tiles[i];
+      if (t.classList.contains('is-out') || !t.classList.contains('is-in')) continue;
+      var r = t.getBoundingClientRect();
+      if (r.bottom < -200 || r.top > vh + 200) continue;
+      var img = t.querySelector('.tile__img, .tile__ph');
+      if (!img || t.matches(':hover')) continue;
+      var mid = (r.top + r.height / 2 - vh / 2) / vh;   // -1 .. 1
+      img.style.transform = 'translate3d(0,' + (mid * -14) + 'px,0) scale(1.06)';
+      img.style.transitionDelay = '0s';
+    }
+
+    if (queued) { queued = false; requestAnimationFrame(frame); }
+    else running = false;
+  }
+
+  function onScroll() {
+    if (reduceMQ.matches) { nav.classList.toggle('is-stuck', window.pageYOffset > 20); return; }
+    if (running) { queued = true; return; }
+    requestAnimationFrame(frame);
+  }
+
+  // Parallax writes an inline transform, which outranks the CSS :hover rule.
+  // Clearing it on enter hands the tile back to CSS; the loop skips hovered
+  // tiles, then resumes once the pointer leaves.
+  tiles.forEach(function (t) {
+    t.addEventListener('pointerenter', function () {
+      var img = t.querySelector('.tile__img, .tile__ph');
+      if (img) img.style.transform = '';
+    });
+  });
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll, { passive: true });
+  onScroll();
 
   /* ---------------- lightbox ---------------- */
   var lb = $('#lb'), lbBox = $('#lbBox'), lbCat = $('#lbCat'), lbTitle = $('#lbTitle');
@@ -218,8 +289,8 @@
     render(i);
     lb.hidden = false;
     lb.classList.add('is-shown');
-    // reflow so the fade actually runs AND the dialog is displayed before
-    // focus() — focusing a display:none element is silently dropped
+    // reflow so the fade runs AND the dialog is displayed before focus() —
+    // focusing inside a display:none element is silently dropped
     void lb.offsetWidth;
     lb.classList.add('is-open');
     document.body.classList.add('is-locked');
@@ -233,7 +304,7 @@
       lbBox.innerHTML = '';               // unmount so audio stops
       lb.classList.remove('is-shown');
       lb.hidden = true;
-    }, reduceMQ.matches ? 0 : 300);
+    }, reduceMQ.matches ? 0 : 320);
     if (lastFocus) lastFocus.focus();
   }
 
