@@ -49,12 +49,16 @@
   </div>
 </div>
 
+<div class="page" id="page">
 <main id="top">
 
   <!-- ===================== HERO — portrait plate, name across it ===================== -->
   <section class="hero" id="hero">
     <div class="hero__stage">
-      <div class="hero__reel" id="heroReel">
+      <span class="hero__ghost" id="ghostB" aria-hidden="true"></span>
+      <span class="hero__ghost" id="ghostA" aria-hidden="true"></span>
+
+      <div class="hero__reel has-beam" id="heroReel">
         <div class="hero__media" id="heroMedia">
           <!-- Source is attached by main.js from SITE.reelFile, with the
                YouTube reel as an automatic fallback if the file is missing. -->
@@ -109,11 +113,11 @@
           <span class="mask" data-rv-mask style="--d:90ms"><span>Vijayaratnam</span></span>
         </h2>
 
-        <p class="lede" data-rv style="--d:120ms">
+        <p class="lede words" data-words>
           Hello from Colombo. I am a commercial photographer and videographer creating
           visual stories that capture the essence of brands, events and people.
         </p>
-        <p class="lede" data-rv style="--d:180ms;margin-top:18px">
+        <p class="lede words" data-words style="margin-top:18px">
           I work across the whole piece — direction, camera, drone and the edit — so a
           project holds one look from the first frame through to delivery.
         </p>
@@ -130,7 +134,7 @@
   <!-- ===================== CONTACT ===================== -->
   <section class="section contact" id="contact">
     <span class="eyebrow" data-rv>Contact</span>
-    <p class="contact__big">
+    <p class="contact__big" id="ctaLine">
       <span class="mask" data-rv-mask><span>
         <a href="#" data-link="whatsapp" target="_blank" rel="noopener">Let&rsquo;s make something</a>
       </span></span>
@@ -146,9 +150,13 @@
     </div>
   </section>
 </main>
+</div><!-- /.page -->
 
-<footer class="foot">
+<footer class="foot foot--reveal" id="foot">
   <span>&copy; <span id="year">2026</span> Dhanushan Vijayaratnam</span>
+  <span class="foot__credit">
+    Site by <a href="https://ark-devs.github.io/Profile/" target="_blank" rel="noopener">Ark Devs</a>
+  </span>
   <span>Colombo, Sri Lanka</span>
 </footer>
 
@@ -160,7 +168,12 @@
       <button id="lbNext" aria-label="Next project">&#8594;</button>
     </div>
     <button class="lb__close" id="lbClose" aria-label="Close">&#10005;</button>
-    <div class="lb__box" id="lbBox"></div>
+
+    <div class="lb__flow">
+      <button class="lb__side lb__side--prev" id="lbSidePrev" aria-label="Previous project"></button>
+      <div class="lb__box" id="lbBox"></div>
+      <button class="lb__side lb__side--next" id="lbSideNext" aria-label="Next project"></button>
+    </div>
   </div>
 
   <div class="lb__info">
@@ -176,6 +189,7 @@
 </div>
 
 <script src="assets/js/work.js"></script>
+<script src="assets/js/motion.js"></script>
 <script src="assets/js/main.js"></script>
 </body>
 </html>

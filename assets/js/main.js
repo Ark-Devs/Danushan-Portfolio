@@ -205,7 +205,11 @@
      frames for depth. */
   var heroEl = $('#hero'), heroReel = $('#heroReel'), wordEl = $('#wordmark');
   var wordInner = wordEl ? wordEl.firstElementChild : null;
+  var ghosts = [$('#ghostA'), $('#ghostB')].filter(Boolean);
   var running = false, queued = false;
+
+  // intro runs 0 -> 1 once on load; the hero transform blends it with scroll
+  var intro = M.reduced() ? 1 : 0;
 
   function frame() {
     running = true;
@@ -216,9 +220,27 @@
     if (heroEl && heroReel && wordInner) {
       var h = heroEl.offsetHeight || 1;
       var p = clamp(y / (h * 0.9), 0, 1);
-      heroReel.style.transform = 'translate3d(0,' + (p * 46) + 'px,0) scale(' + (1 + p * 0.07) + ')';
+
+      // screenshot-scroll-reveal: the plate starts tilted back in 3D on
+      // load and stands upright, then keeps lifting as you scroll on
+      var tilt = (1 - intro) * 15;
+      heroReel.style.transform =
+        'translate3d(0,' + (p * 46 + (1 - intro) * 26) + 'px,0) ' +
+        'rotateX(' + tilt.toFixed(2) + 'deg) ' +
+        'scale(' + ((1 + p * 0.07) * (0.94 + intro * 0.06)).toFixed(4) + ')';
+
       wordInner.style.transform = 'translate3d(0,' + (p * -84) + 'px,0) scale(' + (1 - p * 0.05) + ')';
       wordInner.style.opacity = String(clamp(1 - p * 1.35, 0, 1));
+
+      // card-stack: the ghosts fan out as the stack settles and on scroll
+      for (var g = 0; g < ghosts.length; g++) {
+        var k = g + 1;
+        var spread = intro * (1 + p * 0.9);
+        ghosts[g].style.transform =
+          'translate(-50%,-50%) translate3d(' + (k * 17 * spread) + 'px,' + (k * -11 * spread) + 'px,0) ' +
+          'rotate(' + (k * 1.7 * spread).toFixed(2) + 'deg) scale(' + (1 - k * 0.045) + ')';
+        ghosts[g].style.opacity = String(clamp(intro * (0.5 - g * 0.18) * (1 - p * 0.7), 0, 1));
+      }
     }
 
     // parallax only for tiles currently on screen
@@ -259,6 +281,27 @@
   window.addEventListener('resize', onScroll, { passive: true });
   onScroll();
 
+  if (!M.reduced()) {
+    var introStart = null;
+    requestAnimationFrame(function introStep(now) {
+      if (introStart === null) introStart = now;
+      var k = clamp((now - introStart) / 1150, 0, 1);
+      intro = 1 - Math.pow(1 - k, 3);
+      onScroll();
+      if (k < 1) requestAnimationFrame(introStep);
+    });
+  }
+
+  /* ---------------- motion.dev patterns ---------------- */
+  $$('[data-words]').forEach(function (el) { M.words(el); });
+  if (heroReel) M.beam(heroReel, { duration: '7s' });
+  // magnetic-pull is deliberately used once, on the single call to action.
+  // Applied to a row of controls it reads as noise — every pill lunging at
+  // the cursor at the same time — and stops feeling like an affordance.
+  var cta = $('#ctaLine a');
+  if (cta) M.magnetic(cta, { strength: 0.3, radius: 110 });
+  M.footerReveal($('#page'), $('#foot'));
+
   /* ---------------- lightbox ---------------- */
   var lb = $('#lb'), lbBox = $('#lbBox'), lbCat = $('#lbCat'), lbTitle = $('#lbTitle');
   var lbDesc = $('#lbDesc'), lbTags = $('#lbTags'), lbClose = $('#lbClose');
@@ -282,10 +325,51 @@
     if (w.client) tags.push(w.client);
     if (w.year) tags.push(w.year);
     lbTags.innerHTML = tags.map(function (t) { return '<span>' + esc(t) + '</span>'; }).join('');
+    paintSides();
   }
+
+  /* coverflow — the neighbouring projects, angled either side */
+  var sidePrev = $('#lbSidePrev'), sideNext = $('#lbSideNext');
+
+  function visibleOrder() {
+    return tiles.filter(function (t) { return !t.classList.contains('is-out'); })
+                .map(function (t) { return +t.getAttribute('data-i'); });
+  }
+
+  function paintSide(el, idx) {
+    if (!el) return;
+    var w = WORK[idx];
+    if (!w || idx === current) { el.hidden = true; return; }
+    el.hidden = false;
+    var hue = (idx * 47) % 360;
+    var art = w.thumb
+      ? '<img src="' + esc(w.thumb) + '" alt="" />'
+      : '<span class="tile__ph" style="--h:' + hue + '"><span>' + esc(w.title.charAt(0)) + '</span></span>';
+    el.innerHTML = art + '<span class="lb__sideLabel">' + esc(w.title) + '</span>';
+    el.setAttribute('aria-label', 'Open ' + w.title);
+  }
+
+  function paintSides() {
+    var order = visibleOrder();
+    if (order.length < 2) { if (sidePrev) sidePrev.hidden = true; if (sideNext) sideNext.hidden = true; return; }
+    var at = order.indexOf(current);
+    paintSide(sidePrev, order[(at - 1 + order.length) % order.length]);
+    paintSide(sideNext, order[(at + 1) % order.length]);
+  }
+
+  if (sidePrev) sidePrev.addEventListener('click', function () { step(-1); });
+  if (sideNext) sideNext.addEventListener('click', function () { step(1); });
 
   function openLb(i, trigger) {
     lastFocus = trigger || document.activeElement;
+
+    // expand-card: measure the tile before the dialog paints over it
+    var fromRect = null;
+    if (trigger && trigger.classList && trigger.classList.contains('tile')) {
+      var f = trigger.querySelector('.tile__frame');
+      if (f) fromRect = f.getBoundingClientRect();
+    }
+
     render(i);
     lb.hidden = false;
     lb.classList.add('is-shown');
@@ -294,6 +378,7 @@
     void lb.offsetWidth;
     lb.classList.add('is-open');
     document.body.classList.add('is-locked');
+    M.flip(fromRect, lbBox);
     lbClose.focus();
   }
 
@@ -302,6 +387,7 @@
     document.body.classList.remove('is-locked');
     window.setTimeout(function () {
       lbBox.innerHTML = '';               // unmount so audio stops
+      M.unflip(lbBox);
       lb.classList.remove('is-shown');
       lb.hidden = true;
     }, reduceMQ.matches ? 0 : 320);

@@ -6,7 +6,8 @@ Live: https://ark-devs.github.io/Danushan-Portfolio/
 
 | Branch | What it is |
 |---|---|
-| `main` | **v3** — light / minimal / premium. Current direction. |
+| `main` | **v4** — light / minimal / premium, motion pass. Current direction. |
+| `v3` | Light theme, portrait hero plate. Kept for reference. |
 | `v2` | Dark minimal. Kept for reference. |
 | `v1` | The first build (retro-brutalist). Kept for reference. |
 
@@ -18,6 +19,7 @@ Each new direction gets its own branch (`v3`, `v4`…) so nothing is lost.
 index.html              page markup only
 assets/css/style.css    all styling
 assets/js/work.js       ← the projects. This is the file you edit.
+assets/js/motion.js     motion engine (one rAF ticker, all effects)
 assets/js/main.js       behaviour (grid, filters, lightbox, hero reel)
 assets/img/             thumbnails, portrait, poster
 assets/video/           showreel.mp4
@@ -90,3 +92,27 @@ Then open http://localhost:8899. It must be served over http — opening
 - [ ] YouTube ids for each project
 - [ ] Real descriptions — the current ones are drafts written from the
       Behance project titles and need Dhanushan's own words
+
+## Motion
+
+Patterns follow the motion.dev/ui vocabulary, hand-rolled in `motion.js` so
+the site stays a zero-dependency static build.
+
+| Pattern | Where it is used |
+|---|---|
+| screenshot-scroll-reveal | hero plate tilts up out of 3D on load |
+| card-stack | ghost plates fanned behind the reel |
+| border-beam | light travelling the plate edge |
+| scroll-word-reveal | About bio, per-word `0.15 → 1` |
+| expand-card | tile FLIPs into the lightbox |
+| coverflow | neighbouring projects at `rotateY 22°`, `scale .82` |
+| footer-reveal | footer sits under the page and is uncovered |
+| magnetic-pull | **the one call to action, nothing else** |
+
+Magnetic pull is deliberately used exactly once. On a row of controls every
+pill lunges at the cursor at the same time, which reads as noise rather than
+as an affordance.
+
+All motion is dropped under `prefers-reduced-motion`, and the dimmed starting
+states only apply once the ticker has produced a real frame — so a page that
+never animates shows its copy at full strength rather than greyed out.

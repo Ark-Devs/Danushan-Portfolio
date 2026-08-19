@@ -127,7 +127,21 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
    HERO — a portrait plate on paper, name across it
    ================================================================== */
 .hero { position: relative; min-height: 100svh; display: grid; grid-template-rows: 1fr auto; padding-top: var(--nav-h); }
-.hero__stage { position: relative; display: grid; place-items: center; padding: clamp(14px, 2.4vw, 34px) var(--pad); min-height: 0; }
+.hero__stage {
+  position: relative; display: grid; place-items: center;
+  padding: clamp(14px, 2.4vw, 34px) var(--pad); min-height: 0;
+  perspective: 1200px;                     /* screenshot-scroll-reveal */
+}
+
+/* card-stack — ghost plates fanned behind the reel, hinting at more work */
+.hero__ghost {
+  position: absolute; top: 50%; left: 50%;
+  height: min(66svh, 620px); aspect-ratio: 9 / 16;
+  background: var(--paper-2); border: 1px solid var(--line);
+  border-radius: 2px; pointer-events: none;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 30px 60px -50px rgba(20, 19, 15, .4);
+}
 
 /* the plate: 9:16, sized off the viewport height so it always fits */
 .hero__reel {
@@ -139,6 +153,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   border-radius: 2px;
   box-shadow: 0 40px 80px -50px rgba(20, 19, 15, .45), 0 2px 10px -6px rgba(20, 19, 15, .25);
   will-change: transform;
+  transform-style: preserve-3d;
 }
 .hero__media { position: absolute; inset: 0; overflow: hidden; }
 .hero__vid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
@@ -378,5 +393,95 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   .tile__img, .tile__ph { transform: none !important; }
   .tile__meta { opacity: 1 !important; transform: none !important; }
   .mask > span { transform: none !important; }
+  .words > .w { opacity: 1 !important; }
+  .beam { display: none !important; }
+  .hero__ghost { display: none !important; }
+  .foot--reveal { position: static; opacity: 1 !important; transform: none !important; }
+  .page { margin-bottom: 0 !important; }
   .wordmark > span, .hero__reel { transform: none !important; opacity: 1 !important; }
 }
+
+
+/* ==================================================================
+   MOTION PATTERNS (motion.dev/ui vocabulary)
+   ================================================================== */
+
+/* ---- scroll-word-reveal ----
+   Dimmed only once the motion ticker has produced a frame, so a page
+   that never animates shows its copy at full strength instead of grey. */
+.words > .w { opacity: 1; will-change: opacity; }
+.motion-ready .words > .w { opacity: .15; }
+
+/* ---- border-beam ----
+   A conic sweep confined to the border box by two masks, so only the
+   1px edge is lit rather than the whole card. */
+.has-beam { position: relative; }
+.beam {
+  position: absolute; inset: 0; border-radius: inherit;
+  padding: 1px; pointer-events: none; z-index: 4;
+  background: conic-gradient(from var(--beam-a, 0deg),
+    transparent 0deg, transparent 300deg,
+    rgba(20, 19, 15, .55) 340deg, rgba(20, 19, 15, .9) 352deg, transparent 360deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  animation: beam-spin 6s linear infinite;
+}
+@property --beam-a { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+@keyframes beam-spin { to { --beam-a: 360deg; } }
+/* Firefox has no @property, so the conic angle cannot animate there.
+   Rotating the whole layer is the equivalent that works everywhere. */
+@supports not (background: conic-gradient(from var(--x, 0deg), red, blue)) {
+  .beam { animation: beam-rot 6s linear infinite; }
+}
+@keyframes beam-rot { to { transform: rotate(360deg); } }
+
+/* ---- expand-card ---- */
+.lb__box { will-change: transform; }
+
+/* ---- coverflow: the neighbouring projects, either side ---- */
+.lb__flow {
+  display: flex; align-items: center; justify-content: center;
+  gap: clamp(10px, 2vw, 30px); width: 100%; min-height: 0;
+  perspective: 1200px;
+}
+.lb__side {
+  flex: none; position: relative; overflow: hidden;
+  width: clamp(72px, 12vw, 168px); aspect-ratio: 9 / 16;
+  border-radius: 2px; background: var(--paper-2);
+  opacity: .45; transition: opacity .4s var(--ease), transform .5s var(--slow);
+  cursor: pointer;
+}
+.lb__side[hidden] { display: none; }
+.lb__side--prev { transform: rotateY(22deg) scale(.82); transform-origin: right center; }
+.lb__side--next { transform: rotateY(-22deg) scale(.82); transform-origin: left center; }
+.lb__side:hover { opacity: .8; }
+.lb__side--prev:hover { transform: rotateY(16deg) scale(.86); }
+.lb__side--next:hover { transform: rotateY(-16deg) scale(.86); }
+.lb__side .tile__ph { transform: none; }
+.lb__side img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.lb__sideLabel {
+  position: absolute; left: 0; right: 0; bottom: 0; padding: 8px 10px;
+  font-size: .54rem; letter-spacing: .16em; text-transform: uppercase; color: var(--ink);
+  background: linear-gradient(180deg, transparent, rgba(247, 245, 241, .9));
+}
+
+/* ---- footer-reveal: the footer sits beneath an opaque page layer ---- */
+.page { position: relative; z-index: 1; background: var(--paper); }
+.foot--reveal {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 0;
+  border-top: 0; will-change: transform, opacity;
+}
+.motion-ready .foot--reveal { opacity: .25; }
+
+@media (max-width: 700px) {
+  .lb__side { display: none; }
+}
+
+/* ---- build credit ---- */
+.foot__credit a {
+  color: var(--ink); border-bottom: 1px solid var(--line-2);
+  padding-bottom: 2px; transition: border-color .3s, opacity .3s;
+}
+.foot__credit a:hover { border-bottom-color: var(--ink); }
+@media (max-width: 540px) { .foot { justify-content: center; text-align: center; gap: 6px; } }
