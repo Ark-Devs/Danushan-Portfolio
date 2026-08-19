@@ -519,6 +519,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   display: flex; gap: 8px; overflow-x: auto; padding: 14px 0 2px;
   scrollbar-width: none; -webkit-overflow-scrolling: touch;
 }
+.lb__strip { display: none; }   /* superseded by the card stack */
 .lb__strip::-webkit-scrollbar { display: none; }
 .lb__strip[hidden] { display: none; }
 .lb__thumb {
@@ -576,4 +577,81 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 
   .lb__thumb { width: 52px; }
   .lb__strip { padding-top: 10px; }
+}
+
+
+/* ==================================================================
+   CARD STACK — browsing the resources inside one project
+   ------------------------------------------------------------------
+   A project almost always holds several things: the film plus the
+   stills from the same shoot. The stack makes that the normal case
+   rather than a special one. Follows motion.dev/ui defaults —
+   cardGap 16px, cardScaleStep 0.05, fanRotation 4deg, visibleBehind 2.
+   ================================================================== */
+.lb__box { perspective: 1400px; }
+
+.lb__card {
+  position: absolute; inset: 0; overflow: hidden;
+  background: var(--paper-2); border-radius: 2px;
+  transform-origin: center top;
+  transform:
+    translateY(calc(var(--i) * 16px))
+    scale(calc(1 - var(--i) * 0.05))
+    rotate(calc(var(--i) * 4deg));
+  z-index: calc(10 - var(--i));
+  box-shadow: 0 24px 50px -40px rgba(20, 19, 15, .55);
+  transition: transform .52s var(--slow), opacity .38s var(--ease);
+  will-change: transform, opacity;
+}
+.lb__card[data-i="0"] { cursor: pointer; }
+.lb__card img, .lb__card iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.lb__card img { object-fit: cover; }
+.lb__card .tile__ph { transform: none; }
+
+/* the dismissed card pops out to the top left */
+.lb__card.is-out {
+  transform: translate(-44%, -26%) rotate(-14deg) scale(.86);
+  opacity: 0; pointer-events: none;
+}
+/* and the incoming one arrives from underneath */
+.lb__card.is-in-back { transform: translateY(30px) scale(.9) rotate(6deg); opacity: 0; }
+
+.lb__ph--card {
+  position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 18px;
+  color: var(--slate); font-size: .62rem; letter-spacing: .14em; text-transform: uppercase; line-height: 1.9;
+}
+
+/* resource controls, under the stack */
+.lb__res {
+  grid-column: 1 / -1;
+  display: flex; align-items: center; gap: 14px; padding-top: 14px;
+}
+.lb__res[hidden] { display: none; }
+.lb__count {
+  font-size: .62rem; letter-spacing: .18em; text-transform: uppercase; color: var(--slate);
+  font-variant-numeric: tabular-nums; min-width: 62px;
+}
+.lb__dots { display: flex; gap: 6px; flex: 1; flex-wrap: wrap; }
+.lb__dot {
+  width: 22px; height: 3px; border-radius: 2px; background: var(--line-2);
+  transition: background .3s var(--ease), width .3s var(--ease);
+}
+.lb__dot.is-on { background: var(--ink); width: 32px; }
+.lb__step {
+  width: 38px; height: 38px; border: 1px solid var(--line); border-radius: 50%;
+  display: grid; place-items: center; flex: none;
+  transition: background .3s, color .3s, border-color .3s;
+}
+.lb__step:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+@media (max-width: 540px) {
+  .lb__card { transition-duration: .42s; }
+  .lb__count { min-width: 54px; font-size: .58rem; }
+  .lb__dot { width: 16px; }
+  .lb__dot.is-on { width: 24px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lb__card { transition: none !important; }
+  .lb__card.is-out { display: none; }
 }

@@ -348,93 +348,132 @@
   var lbDesc = $('#lbDesc'), lbTags = $('#lbTags'), lbClose = $('#lbClose');
   var current = -1, lastFocus = null;
 
-  /* A project can be a film, a photo library, or both. shot === -1 is the
-     film; 0+ indexes into w.gallery. The strip only appears when there is
-     more than one thing to look at. */
-  var lbStrip = $('#lbStrip');
-  var shot = -1;
+  /* ================================================================
+     CARD STACK — the resources inside one project
+     ----------------------------------------------------------------
+     A project almost always holds more than one thing: the film plus
+     the stills from the same shoot. So the stack, not a single frame,
+     is the normal case. Horizontal moves between projects, the stack
+     moves within one.
+     ================================================================ */
+  var lbRes = $('#lbRes'), lbCount = $('#lbCount'), lbDots = $('#lbDots');
+  var VISIBLE_BEHIND = 2;
+  var shot = 0, animating = false;
 
-  function paintStage(w) {
-    lbBox.className = 'lb__box' + (w.vertical ? '' : ' is-wide');
-
-    if (shot < 0) {
-      lbBox.innerHTML = w.yt
-        ? '<iframe src="https://www.youtube.com/embed/' + esc(w.yt) + '?autoplay=1&rel=0&modestbranding=1&playsinline=1" ' +
-          'title="' + esc(w.title) + '" ' +
-          'allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share" ' +
-          'referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>'
-        : '<div class="lb__ph">Video not linked yet<br />Add a YouTube id in work.js</div>';
-      return;
-    }
-
-    var src = w.gallery && w.gallery[shot];
-    lbBox.innerHTML = '<img class="lb__shot" src="' + esc(src) + '" alt="' +
-                      esc(w.title + ' — shot ' + (shot + 1)) + '" />';
-    var img = lbBox.querySelector('img');
-    img.addEventListener('error', function () {
-      lbBox.innerHTML = '<div class="lb__ph">Photo ' + (shot + 1) + ' of ' + w.gallery.length +
-                        '<br />Drop it at ' + esc(src) + '</div>';
-    });
+  function resourcesOf(w) {
+    var out = [];
+    if (w.yt) out.push({ kind: 'film', yt: w.yt });
+    (w.gallery || []).forEach(function (src, n) { out.push({ kind: 'photo', src: src, n: n }); });
+    if (!out.length) out.push({ kind: 'empty' });
+    return out;
   }
 
-  function paintStrip(w) {
-    var items = [];
-    if (w.yt) items.push({ kind: 'reel', src: '' });
-    (w.gallery || []).forEach(function (g, n) { items.push({ kind: 'shot', src: g, n: n }); });
+  function cardInner(w, it, isFront) {
+    if (it.kind === 'film') {
+      // only the front card gets a live player, so one project never
+      // spins up several iframes at once
+      if (!isFront) return '<span class="tile__ph" style="--h:30"></span>';
+      return '<iframe src="https://www.youtube.com/embed/' + esc(it.yt) +
+             '?autoplay=1&rel=0&playsinline=1&controls=1&iv_load_policy=3" ' +
+             'title="' + esc(w.title) + '" ' +
+             'allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share" ' +
+             'referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>';
+    }
+    if (it.kind === 'photo') {
+      return '<img src="' + esc(it.src) + '" alt="' + esc(w.title + ' — ' + (it.n + 1)) + '" ' +
+             'loading="lazy" decoding="async" />' +
+             '<span class="lb__ph--card" data-fallback hidden>Photo ' + (it.n + 1) +
+             '<br />Drop it at ' + esc(it.src) + '</span>';
+    }
+    return '<span class="lb__ph--card">Nothing linked yet<br />Add a film or a gallery in work.js</span>';
+  }
 
-    if (items.length < 2) { lbStrip.hidden = true; lbStrip.innerHTML = ''; return; }
-    lbStrip.hidden = false;
+  function paintStack(w) {
+    var items = resourcesOf(w);
+    var depth = Math.min(VISIBLE_BEHIND, items.length - 1);
+    var html = '';
+    for (var d = depth; d >= 0; d--) {              // back to front
+      var it = items[(shot + d) % items.length];
+      html += '<div class="lb__card" data-i="' + d + '" style="--i:' + d + '">' +
+                cardInner(w, it, d === 0) +
+              '</div>';
+    }
+    lbBox.className = 'lb__box' + (w.vertical ? '' : ' is-wide');
+    lbBox.innerHTML = html;
 
-    lbStrip.innerHTML = items.map(function (it) {
-      var idx = it.kind === 'reel' ? -1 : it.n;
-      var on = idx === shot ? ' is-on' : '';
-      var inner = it.kind === 'reel'
-        ? '<span class="tile__ph" style="--h:30"></span>'
-        : '<img src="' + esc(it.src) + '" alt="" loading="lazy" />';
-      var cls = 'lb__thumb' + on + (it.kind === 'reel' ? ' lb__thumb--reel' : '');
-      return '<button class="' + cls + '" data-shot="' + idx + '" aria-label="' +
-             (it.kind === 'reel' ? 'Play the film' : 'Show photo ' + (it.n + 1)) + '">' + inner + '</button>';
-    }).join('');
-
-    // a missing photo falls back to a placeholder rather than a torn icon
-    $$('img', lbStrip).forEach(function (im) {
+    // a missing photo swaps to the note naming its path
+    $$('img', lbBox).forEach(function (im) {
       im.addEventListener('error', function () {
-        var ph = document.createElement('span');
-        ph.className = 'tile__ph';
-        if (im.parentNode) im.parentNode.replaceChild(ph, im);
+        var note = im.parentNode && im.parentNode.querySelector('[data-fallback]');
+        im.style.display = 'none';
+        if (note) note.hidden = false;
       });
     });
+
+    paintRes(items);
   }
 
-  lbStrip.addEventListener('click', function (e) {
-    var b = e.target.closest('.lb__thumb');
-    if (!b) return;
-    shot = +b.getAttribute('data-shot');
+  function paintRes(items) {
+    if (items.length < 2) { lbRes.hidden = true; return; }
+    lbRes.hidden = false;
+    lbCount.textContent = (shot + 1) + ' / ' + items.length;
+    lbDots.innerHTML = items.map(function (_, n) {
+      return '<span class="lb__dot' + (n === shot ? ' is-on' : '') + '"></span>';
+    }).join('');
+  }
+
+  function stepShot(dir) {
     var w = WORK[current];
-    paintStage(w);
-    $$('.lb__thumb', lbStrip).forEach(function (t) {
-      t.classList.toggle('is-on', +t.getAttribute('data-shot') === shot);
-    });
+    if (!w || animating) return;
+    var items = resourcesOf(w);
+    if (items.length < 2) return;
+
+    var front = lbBox.querySelector('.lb__card[data-i="0"]');
+    animating = true;
+
+    var advance = function () {
+      shot = (shot + dir + items.length) % items.length;
+      paintStack(w);
+      animating = false;
+    };
+
+    if (dir > 0 && front && !M.reduced()) {
+      front.classList.add('is-out');       // pop the top card away first
+      window.setTimeout(advance, 260);
+    } else {
+      advance();
+    }
+  }
+
+  $('#lbShotNext').addEventListener('click', function () { stepShot(1); });
+  $('#lbShotPrev').addEventListener('click', function () { stepShot(-1); });
+
+  // clicking the front card advances, except on the film (its own controls)
+  lbBox.addEventListener('click', function (e) {
+    if (e.target.closest('iframe')) return;
+    var card = e.target.closest('.lb__card[data-i="0"]');
+    if (card) stepShot(1);
   });
 
-  function render(i, keepShot) {
-    var w = WORK[i];
-    if (!w) return;
-    current = i;
-    if (!keepShot) shot = w.yt ? -1 : 0;      // film first, else the first photo
-    paintStage(w);
-    paintStrip(w);
-    lbCat.textContent = w.cat;
-    lbTitle.textContent = w.title;
-    lbDesc.textContent = w.desc || '';
-    var tags = [];
-    if (w.client) tags.push(w.client);
-    if (w.year) tags.push(w.year);
-    lbTags.innerHTML = tags.map(function (t) { return '<span>' + esc(t) + '</span>'; }).join('');
-    paintSides();
-  }
+  // drag or swipe the stack
+  (function () {
+    var sx = 0, sy = 0, down = false;
+    lbBox.addEventListener('pointerdown', function (e) {
+      if (e.target.closest('iframe')) return;
+      down = true; sx = e.clientX; sy = e.clientY;
+    });
+    lbBox.addEventListener('pointerup', function (e) {
+      if (!down) return;
+      down = false;
+      var dx = e.clientX - sx, dy = e.clientY - sy;
+      if (Math.max(Math.abs(dx), Math.abs(dy)) > 55) {
+        stepShot((dx < 0 || dy < 0) ? 1 : -1);
+      }
+    });
+    lbBox.addEventListener('pointercancel', function () { down = false; });
+  })();
 
-  /* coverflow — the neighbouring projects, angled either side */
+  /* ---------------- coverflow: the neighbouring projects ---------------- */
   var sidePrev = $('#lbSidePrev'), sideNext = $('#lbSideNext');
 
   function visibleOrder() {
@@ -457,7 +496,11 @@
 
   function paintSides() {
     var order = visibleOrder();
-    if (order.length < 2) { if (sidePrev) sidePrev.hidden = true; if (sideNext) sideNext.hidden = true; return; }
+    if (order.length < 2) {
+      if (sidePrev) sidePrev.hidden = true;
+      if (sideNext) sideNext.hidden = true;
+      return;
+    }
     var at = order.indexOf(current);
     paintSide(sidePrev, order[(at - 1 + order.length) % order.length]);
     paintSide(sideNext, order[(at + 1) % order.length]);
@@ -465,6 +508,23 @@
 
   if (sidePrev) sidePrev.addEventListener('click', function () { step(-1); });
   if (sideNext) sideNext.addEventListener('click', function () { step(1); });
+
+  /* ---------------- paint one project ---------------- */
+  function render(i) {
+    var w = WORK[i];
+    if (!w) return;
+    current = i;
+    shot = 0;                                  // each project opens on its first item
+    paintStack(w);
+    lbCat.textContent = w.cat;
+    lbTitle.textContent = w.title;
+    lbDesc.textContent = w.desc || '';
+    var tags = [];
+    if (w.client) tags.push(w.client);
+    if (w.year) tags.push(w.year);
+    lbTags.innerHTML = tags.map(function (t) { return '<span>' + esc(t) + '</span>'; }).join('');
+    paintSides();
+  }
 
   function openLb(i, trigger) {
     lastFocus = trigger || document.activeElement;
@@ -524,8 +584,10 @@
       return;
     }
     if (e.key === 'Escape') closeLb();
-    else if (e.key === 'ArrowLeft') step(-1);
-    else if (e.key === 'ArrowRight') step(1);
+    // multi-resource is the common case, so the arrows step through the
+    // project's own items; the side cards move between projects
+    else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') stepShot(-1);
+    else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') stepShot(1);
   });
 
   // keep tab focus inside the dialog, but still allow reaching the player

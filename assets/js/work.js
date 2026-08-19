@@ -24,6 +24,11 @@
    Projects below are taken from behance.net/dhanushvijayar1.
    The descriptions are first drafts — rewrite them in Dhanushan's
    own words, they are the one thing here I could not source.
+
+   Every project carries a gallery, because a shoot almost always
+   produces more than one usable frame. The counts here are scaffolding,
+   not real numbers — add or remove lines to match what each project
+   actually has, then drop the files at the paths listed.
    ================================================================== */
 
 window.WORK = [
@@ -35,6 +40,16 @@ window.WORK = [
     thumb: '',
     yt: '',
     vertical: true,
+    gallery: [
+      'assets/img/heritance-aarah/01.jpg',
+      'assets/img/heritance-aarah/02.jpg',
+      'assets/img/heritance-aarah/03.jpg',
+      'assets/img/heritance-aarah/04.jpg',
+      'assets/img/heritance-aarah/05.jpg',
+      'assets/img/heritance-aarah/06.jpg',
+      'assets/img/heritance-aarah/07.jpg',
+      'assets/img/heritance-aarah/08.jpg'
+    ],
     desc: 'Resort film and stills covering the property, the rooms and the guest experience.'
   },
   {
@@ -45,6 +60,14 @@ window.WORK = [
     thumb: '',
     yt: '',
     vertical: true,
+    gallery: [
+      'assets/img/taj-navratna/01.jpg',
+      'assets/img/taj-navratna/02.jpg',
+      'assets/img/taj-navratna/03.jpg',
+      'assets/img/taj-navratna/04.jpg',
+      'assets/img/taj-navratna/05.jpg',
+      'assets/img/taj-navratna/06.jpg'
+    ],
     desc: 'Restaurant content for Navratna, the Indian fine-dining room at Taj Samudra, Colombo.'
   },
   {
@@ -75,6 +98,13 @@ window.WORK = [
     thumb: '',
     yt: '',
     vertical: true,
+    gallery: [
+      'assets/img/knorr/01.jpg',
+      'assets/img/knorr/02.jpg',
+      'assets/img/knorr/03.jpg',
+      'assets/img/knorr/04.jpg',
+      'assets/img/knorr/05.jpg'
+    ],
     desc: 'Food content for Knorr — preparation, plating and pack shots.'
   },
   {
@@ -85,6 +115,14 @@ window.WORK = [
     thumb: '',
     yt: '',
     vertical: true,
+    gallery: [
+      'assets/img/imorich/01.jpg',
+      'assets/img/imorich/02.jpg',
+      'assets/img/imorich/03.jpg',
+      'assets/img/imorich/04.jpg',
+      'assets/img/imorich/05.jpg',
+      'assets/img/imorich/06.jpg'
+    ],
     desc: 'Product and lifestyle content for the Imorich ice cream range.'
   },
   {
@@ -95,6 +133,12 @@ window.WORK = [
     thumb: '',
     yt: '',
     vertical: true,
+    gallery: [
+      'assets/img/lactogrow/01.jpg',
+      'assets/img/lactogrow/02.jpg',
+      'assets/img/lactogrow/03.jpg',
+      'assets/img/lactogrow/04.jpg'
+    ],
     desc: 'Brand content for Lactogrow.'
   },
   {
@@ -105,6 +149,12 @@ window.WORK = [
     thumb: '',
     yt: '',
     vertical: true,
+    gallery: [
+      'assets/img/roofvo/01.jpg',
+      'assets/img/roofvo/02.jpg',
+      'assets/img/roofvo/03.jpg',
+      'assets/img/roofvo/04.jpg'
+    ],
     desc: 'Commercial shoot for Roofvo.'
   },
   {
@@ -115,6 +165,14 @@ window.WORK = [
     thumb: '',
     yt: '',
     vertical: true,
+    gallery: [
+      'assets/img/luv-paradise/01.jpg',
+      'assets/img/luv-paradise/02.jpg',
+      'assets/img/luv-paradise/03.jpg',
+      'assets/img/luv-paradise/04.jpg',
+      'assets/img/luv-paradise/05.jpg',
+      'assets/img/luv-paradise/06.jpg'
+    ],
     desc: 'Interior film for Luv Paradise by Zarees Interior, shot across the finished space.'
   },
   {
@@ -129,7 +187,8 @@ window.WORK = [
       'assets/img/key-jeans/01.jpg',
       'assets/img/key-jeans/02.jpg',
       'assets/img/key-jeans/03.jpg',
-      'assets/img/key-jeans/04.jpg'
+      'assets/img/key-jeans/04.jpg',
+      'assets/img/key-jeans/05.jpg'
     ],
     desc: 'Apparel campaign for Key Jeans — fit, fabric and movement.'
   },
@@ -141,6 +200,13 @@ window.WORK = [
     thumb: '',
     yt: '',
     vertical: true,
+    gallery: [
+      'assets/img/cbl-lifestyle/01.jpg',
+      'assets/img/cbl-lifestyle/02.jpg',
+      'assets/img/cbl-lifestyle/03.jpg',
+      'assets/img/cbl-lifestyle/04.jpg',
+      'assets/img/cbl-lifestyle/05.jpg'
+    ],
     desc: 'Lifestyle campaign content for CBL.'
   },
   {
@@ -151,6 +217,13 @@ window.WORK = [
     thumb: '',
     yt: '',
     vertical: true,
+    gallery: [
+      'assets/img/chinwag/01.jpg',
+      'assets/img/chinwag/02.jpg',
+      'assets/img/chinwag/03.jpg',
+      'assets/img/chinwag/04.jpg',
+      'assets/img/chinwag/05.jpg'
+    ],
     desc: 'Lifestyle brand shoot for Chinwag.'
   },
   {

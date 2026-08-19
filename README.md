@@ -6,7 +6,7 @@ Live: https://ark-devs.github.io/Danushan-Portfolio/
 
 | Branch | What it is |
 |---|---|
-| `main` | **v4.02** — light / minimal / premium, motion + galleries. Current. |
+| `main` | **v4.03** — light / minimal / premium, motion + card-stack galleries. Current. |
 | `v3` | Light theme, portrait hero plate. Kept for reference. |
 | `v2` | Dark minimal. Kept for reference. |
 | `v1` | The first build (retro-brutalist). Kept for reference. |
@@ -60,15 +60,22 @@ Notes:
   ]
   ```
 
-  A filmstrip appears under the player and each shot opens in the frame.
-  The tile gets an "8 shots" badge. List the paths before the photos exist —
-  each missing one draws a placeholder telling you where to drop the file.
-  A project can have both a film and a gallery; the film sits first in
-  the strip.
+  The project opens as a **card stack** — the film plus every still from
+  that shoot, fanned one behind the next. Advance it by clicking the top
+  card, swiping, the up/down buttons, or the arrow keys. The tile gets an
+  "8 shots" badge.
+
+  **Every project has a gallery**, because a shoot almost always produces
+  more than one usable frame. The counts in `work.js` are scaffolding, not
+  real numbers — add or remove lines to match what each project actually
+  has. List the paths before the photos exist; each missing one draws a
+  placeholder naming the file to drop in.
+
+  A project can have both a film and a gallery; the film sits first.
 
 ### Cache
 
-Asset URLs carry `?v=4.02`. **Bump that number in `index.html` whenever you
+Asset URLs carry `?v=4.03`. **Bump that number in `index.html` whenever you
 edit the CSS or JS**, otherwise returning visitors keep the old cached copy.
 This bit me during development — the browser served a stale `work.js` and the
 new galleries silently did not appear.
@@ -135,6 +142,7 @@ the site stays a zero-dependency static build.
 | scroll-word-reveal | About bio, per-word `0.15 → 1` |
 | expand-card | tile FLIPs into the lightbox |
 | coverflow | neighbouring projects at `rotateY 22°`, `scale .82` |
+| card-stack | a project's own resources, `gap 16px` / `scale −.05` / `4°` |
 | footer-reveal | footer sits under the page and is uncovered |
 | magnetic-pull | **the one call to action, nothing else** |
 
@@ -158,3 +166,13 @@ Fixed in v4.01, all measured at 390px:
 - Tile title and category fought for room on a 171px tile; they now stack.
 - Wide letter-spacing on 10px type was most of the remaining visual noise, so
   tracking is reduced across the micro text below 540px.
+
+## Two axes in the lightbox
+
+- **Across** — the angled cards either side move between *projects*, as do
+  the arrows at the top left.
+- **Down the stack** — the arrow keys, the up/down buttons, a click on the
+  top card or a swipe move between the *resources inside one project*.
+
+The arrow keys drive the stack rather than the projects because a project
+holding several frames is the normal case, not the exception.
