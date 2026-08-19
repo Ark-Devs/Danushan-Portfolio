@@ -55,7 +55,22 @@
      The plate is 9:16 and the iframe matches it exactly, so a vertical
      film fills it with no pillarbox bars. See the CSS note on .hero__yt. */
   var heroVid = $('#heroVid'), heroMedia = $('#heroMedia'), soundBtn = $('#soundBtn');
-  var usingYT = false;
+  var heroCover = $('#heroCover');
+  var usingYT = false, revealed = false;
+
+  // The plate stays covered until the reel is actually running. YouTube's
+  // unstarted player shows a channel row, a large play button and its
+  // watermark; none of that should ever be the first thing on the page.
+  function revealReel() {
+    if (revealed || !heroCover) return;
+    revealed = true;
+    heroCover.classList.add('is-gone');
+  }
+  if (heroCover && SITE.reelPoster) {
+    heroCover.style.backgroundImage = 'url("' + SITE.reelPoster + '")';
+  }
+  // backstop: never leave the plate covered if playback never reports in
+  window.setTimeout(revealReel, 2600);
 
   function useYouTube() {
     if (usingYT || !SITE.reelYouTube) return;
@@ -69,9 +84,32 @@
     f.setAttribute('aria-hidden', 'true');
     f.src = 'https://www.youtube.com/embed/' + SITE.reelYouTube +
             '?autoplay=1&mute=1&loop=1&playlist=' + SITE.reelYouTube +
-            '&controls=0&modestbranding=1&playsinline=1&rel=0&disablekb=1';
+            '&controls=0&playsinline=1&rel=0&disablekb=1&fs=0&iv_load_policy=3' +
+            '&modestbranding=1&enablejsapi=1';
     heroMedia.appendChild(f);
     if (soundBtn) soundBtn.hidden = true;   // no audio control over the embed
+
+    // Ask the player to report its state. It stays silent until sent this
+    // handshake, and then posts onStateChange / infoDelivery messages.
+    f.addEventListener('load', function () {
+      try {
+        f.contentWindow.postMessage(
+          JSON.stringify({ event: 'listening', id: 1, channel: 'widget' }),
+          'https://www.youtube.com'
+        );
+      } catch (e) { /* cross-origin refusal just means we rely on the backstop */ }
+    });
+
+    window.addEventListener('message', function (e) {
+      if (e.origin !== 'https://www.youtube.com' && e.origin !== 'https://www.youtube-nocookie.com') return;
+      var d;
+      try { d = typeof e.data === 'string' ? JSON.parse(e.data) : e.data; } catch (err) { return; }
+      if (!d) return;
+      var playing =
+        (d.event === 'onStateChange' && d.info === 1) ||
+        (d.info && d.info.playerState === 1);
+      if (playing) revealReel();
+    });
   }
 
   if (heroVid) {
@@ -86,6 +124,7 @@
       useYouTube();
     }
 
+    heroVid.addEventListener('playing', revealReel);
     heroVid.addEventListener('error', useYouTube, true);
     // networkState 3 === NO_SOURCE. Also catches a file that never starts.
     window.setTimeout(function () {

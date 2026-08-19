@@ -6,7 +6,7 @@ Live: https://ark-devs.github.io/Danushan-Portfolio/
 
 | Branch | What it is |
 |---|---|
-| `main` | **v4.01** — light / minimal / premium, motion + galleries. Current. |
+| `main` | **v4.02** — light / minimal / premium, motion + galleries. Current. |
 | `v3` | Light theme, portrait hero plate. Kept for reference. |
 | `v2` | Dark minimal. Kept for reference. |
 | `v1` | The first build (retro-brutalist). Kept for reference. |
@@ -68,7 +68,7 @@ Notes:
 
 ### Cache
 
-Asset URLs carry `?v=4.01`. **Bump that number in `index.html` whenever you
+Asset URLs carry `?v=4.02`. **Bump that number in `index.html` whenever you
 edit the CSS or JS**, otherwise returning visitors keep the old cached copy.
 This bit me during development — the browser served a stale `work.js` and the
 new galleries silently did not appear.
@@ -87,6 +87,14 @@ frame while it loads.
 
 If that file is missing, the page falls back to the YouTube reel set in
 `SITE.reelYouTube` at the bottom of `work.js`, so the hero is never empty.
+
+**The local MP4 is still the better answer.** A YouTube embed shows its own
+furniture before it starts playing — channel row, big play button, watermark.
+Two things hold that back: the plate stays covered until playback actually
+reports in, and the player is over-scaled 1.22× so its title bar and
+watermark sit outside the frame and get clipped. A self-hosted MP4 has none
+of that and does not need either workaround. Add
+`assets/img/showreel-poster.jpg` and it is used as the holding image.
 
 Keep the MP4 small — 1080×1920, no audio track, under ~8 MB. It is the first
 thing that loads.

@@ -185,5 +185,6 @@ window.SITE = {
      If that file is missing, the YouTube id below is used instead so the
      hero is never an empty rectangle. */
   reelFile: 'assets/video/showreel.mp4',
+  reelPoster: 'assets/img/showreel-poster.jpg',
   reelYouTube: '0K_cYUzxHdE'
 };

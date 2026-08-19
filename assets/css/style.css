@@ -162,11 +162,28 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
    whole screen: a 9:16 Short gets pillarboxed inside it, and scaling the
    player only scales the bars with it. The player fits its stage to the
    iframe's own dimensions, so a 9:16 iframe holding a 9:16 film fills
-   edge to edge with no bars to clip. Hence: match the plate exactly. */
+   edge to edge with no bars to clip. Hence: match the plate exactly.
+
+   The 1.22 over-scale then pushes YouTube's own furniture — the title bar
+   along the top, the watermark along the bottom — outside the plate, where
+   the frame clips it. modestbranding no longer does anything, and
+   controls=0 only removes the bottom bar, so cropping is what is left. */
 .hero__yt {
-  position: absolute; inset: 0;
+  position: absolute; top: 50%; left: 50%;
   width: 100%; height: 100%; border: 0; pointer-events: none;
+  transform: translate(-50%, -50%) scale(1.22);
+  transform-origin: center center;
 }
+
+/* Held opaque over the plate until the reel is genuinely running, so the
+   unstarted player — big play button, channel row, watermark — is never
+   the first thing anyone sees. */
+.hero__cover {
+  position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background: var(--paper-2) center / cover no-repeat;
+  opacity: 1; transition: opacity .7s var(--ease);
+}
+.hero__cover.is-gone { opacity: 0; }
 .hero__wash { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(247,245,241,.10) 0%, rgba(247,245,241,.06) 42%, rgba(247,245,241,.42) 72%, rgba(247,245,241,.72) 100%); }
 
 /* centred by grid, not by a -50% translate, so the scroll handler is free
